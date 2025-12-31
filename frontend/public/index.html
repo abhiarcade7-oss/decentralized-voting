@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Blockchain Secure Voting System</title>
+
+    <link rel="icon" href="assets/logo.jpg">
+    <link rel="stylesheet" href="assets/styles.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: radial-gradient(circle at center, #0a143a, #030712, #000);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .box {
+            position: absolute;
+            top: 53%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            padding: 50px;
+            background: rgba(5, 20, 45, 0.55);
+            border-radius: 20px;
+            backdrop-filter: blur(14px);
+            text-align: center;
+            box-shadow:
+                0 0 40px rgba(0, 200, 255, 0.3),
+                inset 0 0 25px rgba(0, 140, 200, 0.15);
+            z-index: 10;
+        }
+
+        .box img {
+            width: 140px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.35);
+        }
+
+        .box h1 {
+            color: #b4e4ff;
+            font-size: 28px;
+            letter-spacing: 1px;
+            margin-bottom: 35px;
+            text-shadow: 0 0 12px rgba(0, 180, 255, 0.6);
+            font-weight: 700;
+        }
+
+        .big-text {
+            color: #9bd4ff;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            width: 90%;
+            padding: 14px;
+            margin-top: 15px;
+            background: linear-gradient(90deg, #0078ff, #005bd1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 120, 255, 0.45);
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.7);
+            background: linear-gradient(90deg, #0899ff, #0070f0);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="network"></canvas>
+
+<script>
+    // ================= BACKGROUND ANIMATION =================
+    const canvas = document.getElementById("network");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let points = [];
+
+    for (let i = 0; i < 35; i++) {
+        points.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        });
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        points.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+            ctx.fillStyle = "#00eaff";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        for (let i = 0; i < points.length; i++) {
+            for (let j = i + 1; j < points.length; j++) {
+                const dx = points[i].x - points[j].x;
+                const dy = points[i].y - points[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 180) {
+                    ctx.strokeStyle = "rgba(0, 200, 255, " + (1 - dist / 180) + ")";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(points[i].x, points[i].y);
+                    ctx.lineTo(points[j].x, points[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ================= ADMIN FLOW FIX (IMPORTANT) =================
+    async function openAdmin() {
+        try {
+            const res = await fetch("/admin/check_admin");
+            const data = await res.json();
+
+            if (!data.exists) {
+                // ❌ Admin not created → Register
+                window.location.href = "admin_register.html";
+            } else {
+                // ✅ Admin exists → Login
+                window.location.href = "admin_login.html";
+            }
+        } catch (err) {
+            alert("Server not reachable!");
+            console.error(err);
+        }
+    }
+</script>
+
+<div class="box">
+    <img src="assets/logo.jpg" alt="Logo">
+    <h1>Blockchain-Based Secure Voting System</h1>
+    <p class="big-text">
+        Face Authentication + Encrypted Votes on Ethereum-like Blockchain (Ganache)
+    </p>
+
+    <!-- ✅ UPDATED BUTTON -->
+    <button class="btn" onclick="openAdmin()">Admin Login</button>
+
+    <button class="btn" onclick="location.href='voter_auth.html'">
+        Voter Login (Face Auth)
+    </button>
+
+    <button class="btn" onclick="location.href='results.html'">
+        Live Results
+    </button>
+</div>
+
+</body>
+</html>

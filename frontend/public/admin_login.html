@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login - Secure Blockchain Voting</title>
+    <link rel="icon" href="assets/logo.jpg">
+    <link rel="stylesheet" href="assets/styles.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: radial-gradient(circle at center, #06142a, #030712, #000);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+        }
+
+        /* ================= CAMERA CIRCLE FIX ================= */
+        .camera-circle {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            overflow: hidden;          /* 🔴 MOST IMPORTANT */
+            margin: 20px auto;
+            border: 3px solid #00aaff;
+            display: none;
+            box-shadow: 0 0 25px rgba(0, 200, 255, 0.6);
+        }
+
+        .camera-circle video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;         /* 🔴 FACE FULLY FIT */
+            transform: scaleX(-1);     /* mirror effect */
+        }
+
+
+        .login-box {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            background: rgba(5, 20, 45, 0.55);
+            padding: 40px;
+            border-radius: 18px;
+            backdrop-filter: blur(14px);
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.3),
+                inset 0 0 25px rgba(0, 140, 200, 0.15);
+            z-index: 10;
+        }
+
+        .login-box h1 {
+            color: #b4e4ff;
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 0 0 12px rgba(0, 200, 255, 0.6);
+        }
+
+        .login-box img {
+            width: 110px;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        label {
+            color: #cfeaff;
+            font-size: 14px;
+            float: left;
+            margin: 8px 0 3px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #0078ff, #005bd1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            background: linear-gradient(90deg, #0a98ff, #006aeb);
+        }
+
+        .back-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #8fc7ff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 40px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #8fc7ff;
+            font-size: 18px;
+        }
+
+        #loginMsg {
+            min-height: 20px;
+            color: #f97373;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         ADMIN CHECK + REDIRECT
+         ========================= -->
+    <script>
+        window.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const res = await fetch("/admin/check_admin", { method: "GET" });
+
+                // If backend returned non-JSON or 500, treat as "no admin" (safer)
+                if (!res.ok) {
+                    console.warn("check_admin returned non-ok status:", res.status);
+                    alert("⚠️ Unable to verify admin status (server). If this is first run, please register an admin.");
+                    // Redirect to register so user can bootstrap admin
+                    window.location.href = "/admin_register.html";
+                    return;
+                }
+
+                const data = await res.json();
+                console.log("Admin exists:", data.exists);
+
+                // If backend uses different key by mistake, fallback check:
+                const exists = (typeof data.exists !== "undefined") ? data.exists : (data.admin_exists || false);
+
+                if (!exists) {
+                    alert("⚠️ No admin found! Please register first.");
+                    // Use frontend-available registration page (static) — this file exists in public/
+                    window.location.href = "/admin_register.html";
+                    return;
+                }
+
+                // else admin exists -> do nothing, let login be used
+            } catch (err) {
+                console.error("Admin check failed:", err);
+                // On network error, show a friendly message and keep user on login (optional)
+                const tryRegister = confirm("Could not contact server to check admin status. If this is first run press OK to go to registration page, otherwise Cancel to stay here.");
+                if (tryRegister) window.location.href = "/admin_register.html";
+            }
+        });
+    </script>
+
+    <canvas id="network"></canvas>
+
+    <div class="login-box">
+        <img src="assets/logo.jpg" alt="Logo">
+        <h1>Admin Login</h1>
+
+        <label for="username">Username</label>
+        <input id="username" type="text" placeholder="Enter admin username" autocomplete="username">
+
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+            <input id="password" type="password" placeholder="Enter admin password" autocomplete="current-password">
+            <span id="togglePassword" class="password-toggle">👁</span>
+        </div>
+
+        <p id="loginMsg"></p>
+        <div id="circle" class="camera-circle">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+
+
+
+        <button id="loginBtn" class="btn">Login</button>
+        <a href="/" class="back-link">Back to Home</a>
+    </div>
+
+    <!-- =========================
+         LOGIN LOGIC
+         ========================= -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const loginBtn = document.getElementById("loginBtn");
+            const usernameField = document.getElementById("username");
+            const passwordField = document.getElementById("password");
+            const messageBox = document.getElementById("loginMsg");
+            const video = document.getElementById("video");
+            const circle = document.getElementById("circle");
+
+            let stream = null;
+
+            async function startCamera() {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                circle.style.display = "block";
+            }
+
+            function captureFrame() {
+                const canvas = document.createElement("canvas");
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                return canvas.toDataURL("image/jpeg", 0.9);
+            }
+
+
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") loginBtn.click();
+            });
+
+            // PASSWORD SHOW/HIDE
+            const toggle = document.getElementById("togglePassword");
+            toggle.addEventListener("click", () => {
+                if (passwordField.type === "password") {
+                    passwordField.type = "text";
+                    toggle.textContent = "🙈";
+                } else {
+                    passwordField.type = "password";
+                    toggle.textContent = "👁";
+                }
+            });
+
+            // LOGIN FUNCTION
+            loginBtn.addEventListener("click", async () => {
+
+                const username = usernameField.value.trim();
+                const password = passwordField.value.trim();
+
+                if (!username || !password) {
+                    messageBox.style.color = "#f87171";
+                    messageBox.innerText = "❌ Please fill all fields";
+                    return;
+                }
+
+                messageBox.style.color = "#cbd5e1";
+                messageBox.innerText = "⏳ Verifying...";
+
+                try {
+                    await startCamera();
+
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    const frame = captureFrame();
+
+                    const frames = [];
+
+                    for (let i = 0; i < 3; i++) {
+                        frames.push(captureFrame());
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+
+                    const res = await fetch("/admin/admin_face_login", {
+                        method: "POST",
+                        credentials: "include",   // 🔴 VERY IMPORTANT
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            username,
+                            password,
+                            frames
+                        })
+                    });
+
+
+
+
+                    // Try to parse JSON safely
+                    let data = {};
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        console.warn("Response not JSON:", e);
+                    }
+
+                    if (res.ok && data.success) {
+                        messageBox.style.color = "#4ade80";
+                        messageBox.innerText = "✅ Login successful! Redirecting…";
+
+                        // 🔐 STORE LOGIN FLAG
+                        sessionStorage.setItem("admin_logged_in", "true");
+
+                        setTimeout(() => {
+                            window.location.href = "/admin-panel";
+                        }, 800);
+                    }
+                    else {
+                        // Prefer structured error messages returned by backend
+                        const errMsg = data.error || data.message || "Invalid username or password";
+                        messageBox.style.color = "#f87171";
+                        messageBox.innerText = `❌ ${errMsg}`;
+                    }
+
+                } catch (err) {
+                    console.error("Login request failed:", err);
+                    messageBox.style.color = "#f87171";
+                    messageBox.innerText = "❌ Server error! Check backend.";
+                }
+            });
+
+        });
+    </script>
+
+    <!-- =========================
+        BACKGROUND ANIMATION
+    ========================= -->
+    <script>
+        const canvasBG = document.getElementById("network");
+        const ctx = canvasBG.getContext("2d");
+        function resizeCanvas() {
+            canvasBG.width = window.innerWidth;
+            canvasBG.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        let points = Array.from({ length: 35 }, () => ({
+            x: Math.random() * canvasBG.width,
+            y: Math.random() * canvasBG.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        }));
+
+        function animate() {
+            ctx.clearRect(0, 0, canvasBG.width, canvasBG.height);
+
+            points.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvasBG.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvasBG.height) p.vy *= -1;
+
+                ctx.fillStyle = "#00eaff";
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            for (let i = 0; i < points.length; i++) {
+                for (let j = i + 1; j < points.length; j++) {
+                    const dx = points[i].x - points[j].x;
+                    const dy = points[i].y - points[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 180) {
+                        ctx.strokeStyle = `rgba(0,200,255,${1 - dist / 180})`;
+                        ctx.beginPath();
+                        ctx.moveTo(points[i].x, points[i].y);
+                        ctx.lineTo(points[j].x, points[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+
+</body>
+
+</html>

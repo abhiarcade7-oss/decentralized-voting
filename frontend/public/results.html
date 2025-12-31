@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Election Results</title>
+
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #06142a, #020617 70%);
+            color: #e6f1ff;
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
+        header {
+            text-align: center;
+            padding: 25px;
+        }
+
+        header h1 {
+            font-size: 30px;
+            background: linear-gradient(90deg, #00c6ff, #6be3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            width: 900px;
+            margin: 30px auto;
+            padding: 35px;
+            border-radius: 22px;
+            background: rgba(5, 20, 45, 0.75);
+            box-shadow: 0 0 50px rgba(0, 200, 255, 0.25);
+            text-align: center;
+        }
+
+        .winner {
+            font-size: 20px;
+            margin-bottom: 25px;
+            color: #00ff9d;
+        }
+
+        .charts {
+            display: flex;
+            gap: 45px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        canvas {
+            max-width: 360px;
+            max-height: 360px;
+        }
+
+        .info {
+            margin-top: 20px;
+            color: #9fbcd4;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back a {
+            color: #00cfff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="electionTitle">Election Results</h1>
+</header>
+
+<div class="card">
+    <div class="winner" id="winnerBox"></div>
+
+    <div class="charts">
+        <canvas id="barChart"></canvas>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <p class="info" id="infoText"></p>
+</div>
+
+<div class="back">
+    <a href="/">⬅ Back to Home</a>
+</div>
+
+<script>
+const API = "http://localhost:5000";
+let barChart = null;
+let pieChart = null;
+
+/* 🎨 Glossy 3D-Style Colors */
+const GLOSSY_COLORS = [
+    "#38bdf8", // cyan
+    "#f87171", // red
+    "#22c55e", // green
+    "#facc15", // yellow
+    "#a78bfa", // purple
+    "#fb923c"  // orange
+];
+
+function getColors(n) {
+    return GLOSSY_COLORS.slice(0, n);
+}
+
+async function loadResults() {
+    try {
+        /* ================= ELECTION ================= */
+        const eRes = await fetch(API + "/admin/current_election");
+        const eData = await eRes.json();
+
+        document.getElementById("electionTitle").innerText =
+            eData.exists
+                ? `📊 ${eData.title} (Live Results)`
+                : "No Active Election";
+
+        /* ================= RESULTS ================= */
+        const rRes = await fetch(API + "/admin/results");
+        const rData = await rRes.json();
+
+        if (!rData.results || rData.results.length === 0) {
+            document.getElementById("infoText").innerText =
+                "No candidates available";
+            return;
+        }
+
+        const names = rData.results.map(r => r.name);
+        const votes = rData.results.map(r => r.voteCount);
+        const colors = getColors(names.length);
+
+        /* ================= WINNER (TIE SAFE) ================= */
+        const totalVotes = votes.reduce((a, b) => a + b, 0);
+        const winnerBox = document.getElementById("winnerBox");
+
+        if (totalVotes > 0) {
+            const maxVotes = Math.max(...votes);
+            const leaders = rData.results.filter(r => r.voteCount === maxVotes);
+
+            if (leaders.length === 1) {
+                winnerBox.innerHTML =
+                    `🏆 <b>${leaders[0].name}</b> leading with <b>${maxVotes}</b> vote(s)`;
+            } else {
+                winnerBox.innerHTML =
+                    `🤝 <b>Tie</b> between <b>${leaders.map(l => l.name).join(" & ")}</b>
+                     with <b>${maxVotes}</b> vote(s) each`;
+            }
+        } else {
+            winnerBox.innerHTML = "";
+        }
+
+        /* ================= BAR CHART (GLOSSY) ================= */
+        if (barChart) barChart.destroy();
+        barChart = new Chart(document.getElementById("barChart"), {
+            type: "bar",
+            data: {
+                labels: names,
+                datasets: [{
+                    data: votes,
+                    backgroundColor: colors,
+                    borderRadius: 12,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: "#9fbcd4" },
+                        grid: { color: "rgba(255,255,255,0.05)" }
+                    },
+                    x: {
+                        ticks: { color: "#9fbcd4" },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        /* ================= PIE CHART (3D LOOK) ================= */
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(document.getElementById("pieChart"), {
+            type: "pie",
+            data: {
+                labels: names,
+                datasets: [{
+                    data: votes,
+                    backgroundColor: colors,
+                    borderColor: "#020617",
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: "#e6f1ff",
+                            padding: 18
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById("infoText").innerText =
+            totalVotes === 0
+                ? "Voting has not started yet"
+                : "Live vote count (auto refresh)";
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("infoText").innerText =
+            "❌ Error loading results";
+    }
+}
+
+loadResults();
+setInterval(loadResults, 7000);
+</script>
+
+</body>
+</html>

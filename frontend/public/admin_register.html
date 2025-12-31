@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Setup</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #06142a, #030712, #000);
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #e5f3ff;
+            text-align: center;
+            padding-top: 40px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #9fdcff;
+        }
+
+        p {
+            color: #9fbcd4;
+        }
+
+        .box {
+            width: 420px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(5, 20, 45, 0.55);
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 180, 255, 0.25);
+            backdrop-filter: blur(12px);
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+        }
+
+        .btn {
+            margin-top: 15px;
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(90deg, #0078ff, #005bd1);
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            background: linear-gradient(90deg, #0a98ff, #006aeb);
+        }
+
+        #circle {
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 20px auto;
+            display: none;
+            border: 4px solid #00aaff;
+            box-shadow: 0 0 20px rgba(0,200,255,0.5);
+        }
+
+        #circle video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-size: 16px;
+            min-height: 20px;
+            color: #8fd3ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>First Time Admin Registration</h1>
+    <p>Only one admin is allowed. This step runs once.</p>
+
+    <div class="box">
+        <input id="username" class="input-box" placeholder="Create Username">
+        <input id="password" class="input-box" placeholder="Create Password" type="password">
+
+        <div id="circle">
+            <video id="video" autoplay muted></video>
+        </div>
+
+        <button id="registerBtn" class="btn">Register Admin</button>
+        <p id="status"></p>
+    </div>
+
+<script>
+    window.onerror = (msg) => console.error("JS Error:", msg);
+
+const video = document.getElementById("video");
+const circle = document.getElementById("circle");
+const registerBtn = document.getElementById("registerBtn");
+const statusBox = document.getElementById("status");
+
+if (!video || !circle || !registerBtn || !statusBox) {
+  console.error("❌ Required DOM elements missing");
+} else {
+
+  let frames = [];
+  let stream = null;
+
+  async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        circle.style.display = "block";
+        } catch (err) {
+        console.error("Camera access failed:", err);
+        statusBox.innerText = "❌ Camera permission denied";
+        throw err; // stop registration safely
+    }
+  }
+
+
+  async function captureFrames() {
+    frames = [];
+    const canvas = document.createElement("canvas");
+    canvas.width = 260;
+    canvas.height = 260;
+    const ctx = canvas.getContext("2d");
+
+    for (let i = 0; i < 30; i++) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frames.push(canvas.toDataURL("image/jpeg"));
+      statusBox.innerText = `📸 Capturing ${i + 1}/30`;
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+
+  registerBtn.onclick = async () => {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!username || !password) {
+      alert("Username & Password required");
+      return;
+    }
+
+    try {
+      statusBox.innerText = "Starting camera...";
+      await startCamera();
+
+      statusBox.innerText = "Capturing face...";
+      await captureFrames();
+
+      const res = await fetch("/admin/setup_admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, frames })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        statusBox.innerText = "✅ Admin registered successfully!";
+        setTimeout(() => {
+          window.location.href = "/admin_login.html";
+        }, 1500);
+
+      } else if (data.already_exists) {
+        statusBox.innerText = "⚠ Admin already exists. Redirecting to login...";
+        setTimeout(() => {
+          window.location.href = "/admin_login.html";
+        }, 1500);
+
+      } else {
+        statusBox.innerText = data.error || "❌ Registration failed";
+      }
+
+
+    } catch (e) {
+      console.error(e);
+      statusBox.innerText = "Camera error";
+    } finally {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    }
+  };
+}
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+services:
+  voting-db:
+    image: mysql:8.0
+    container_name: voting-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: voting_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    restart: always
+
+  voting-ganache:
+    image: trufflesuite/ganache-cli
+    container_name: voting-ganache
+    command: --host 0.0.0.0 --accounts 10 --deterministic
+    ports:
+      - "8545:8545"
+    restart: always
+
+  voting-backend:
+    container_name: voting-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: mysql+pymysql://root:root@voting-db:3306/voting_db
+      RPC_URL: http://voting-ganache:8545
+    volumes:
+      - ./frontend:/app/frontend   # ⭐ FIX WORKING GUARANTEED
+    depends_on:
+      - voting-db
+      - voting-ganache
+    restart: always
+
+volumes:
+  mysql_data:

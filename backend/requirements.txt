@@ -1,0 +1,15 @@
+Flask
+Flask-Cors
+Flask-SQLAlchemy
+SQLAlchemy
+
+PyMySQL
+cryptography
+python-dotenv
+web3
+
+opencv-python
+numpy
+face-recognition-models
+face_recognition
+Pillow

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voter Face Verification</title>
+    <link rel="stylesheet" href="assets/styles.css">
+
+    <style>
+        #circle {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 20px auto;
+            display: none;
+            border: 4px solid #00aaff;
+        }
+
+        #circle video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Voter Face Verification</h1>
+</header>
+
+<div class="card">
+
+    <!-- USERNAME -->
+    <input
+        id="username"
+        placeholder="Voter Username"
+        required
+        class="input-box"
+    >
+
+    <!-- ENROLLMENT -->
+    <input
+        id="enrollment"
+        placeholder="Enrollment Number"
+        required
+        class="input-box"
+    >
+
+    <!-- CAMERA CIRCLE -->
+    <div id="circle">
+        <video id="video" autoplay muted playsinline></video>
+    </div>
+
+    <!-- BUTTON -->
+    <button class="btn" id="authBtn">Authenticate</button>
+
+    <!-- MESSAGE -->
+    <p id="msg" class="warning"></p>
+
+    <a href="/" class="link">Back to Home</a>
+</div>
+
+<!-- AUTH SCRIPT -->
+<script type="module" src="js/auth.js"></script>
+
+</body>
+</html>

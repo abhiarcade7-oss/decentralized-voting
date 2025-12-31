@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Candidate Registration - Secure Voting</title>
+
+  <style>
+
+    /* ========================= FIXED BODY (CENTER + NO SCROLL) ========================= */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: radial-gradient(circle at center, #02170c, #000);
+      color: #39ff14;
+      height: 100vh;
+      overflow: hidden; /* 🚀 remove outer scroll */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ========================= FIXED CONTAINER (INNER SCROLL ONLY) ========================= */
+    .container {
+      width: 850px;
+      max-height: 90vh;
+      overflow-y: auto; /* inner scroll */
+      background: rgba(0, 255, 100, 0.05);
+      border: 1px solid #00ff88;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 30px rgba(0, 255, 120, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 35px;
+      font-size: 30px;
+      text-shadow: 0 0 25px #00ff88;
+    }
+
+    /* ========================= FORM ========================= */
+    .form-section {
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 15px;
+      color: #9cff9c;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      background: #00140a;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 15px #00ff88;
+    }
+
+    button {
+      margin-top: 20px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #00ff88, #00cc55);
+      color: black;
+      font-weight: bold;
+      border: none;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 20px #00ff88;
+    }
+
+    /* ========================= CANDIDATE LIST ========================= */
+    .candidate-list {
+      margin-top: 40px;
+    }
+
+    .candidate-list h2 {
+      margin-bottom: 15px;
+      text-align: center;
+      text-shadow: 0 0 12px #00ff88;
+      font-size: 24px;
+    }
+
+    .candidate-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #002211;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #00ff88;
+      box-shadow: 0 0 10px rgba(0,255,100,0.25);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .candidate-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .candidate-photo {
+      height: 65px;
+      width: 65px;
+      border-radius: 50%;
+      border: 1px solid #0f0;
+      object-fit: cover;
+      box-shadow: 0 0 12px #00ff88;
+    }
+
+    .info {
+      flex: 1;
+    }
+
+    .info h3 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .info p {
+      margin: 3px 0;
+      font-size: 15px;
+    }
+
+    .delete-btn {
+      background: #ff0033;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .delete-btn:hover {
+      background: #cc0000;
+      box-shadow: 0 0 10px red;
+    }
+
+    /* ========================= FOOTER ========================= */
+    .footer-note {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 13px;
+      color: #66ff99;
+      opacity: 0.75;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🗳 Secure Candidate Registration Panel</h1>
+
+  <!-- ========================= CANDIDATE FORM ========================= -->
+  <div class="form-section">
+
+    <label>Candidate Name</label>
+    <input id="candidateName" type="text" placeholder="Enter Candidate Name">
+
+    <label>Party / Department Name</label>
+    <input id="partyName" type="text" placeholder="e.g., BJP / Physics Dept">
+
+    <label>Age</label>
+    <select id="candidateAge">
+      <option value="">-- Select Age (Optional) --</option>
+    </select>
+
+    <label>Highest Qualification</label>
+    <select id="qualification" onchange="showOtherField()">
+      <option value="">-- Select Qualification (Optional) --</option>
+      <option value="7th Pass">7th Pass</option>
+      <option value="8th Pass">8th Pass</option>
+      <option value="9th Pass">9th Pass</option>
+      <option value="10th Pass">10th Pass</option>
+      <option value="Intermediate">Intermediate</option>
+      <option value="Undergraduate">Undergraduate</option>
+      <option value="Graduate">Graduate</option>
+      <option value="Post Graduate">Post Graduate</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <input id="qualificationOther"
+           type="text"
+           placeholder="Enter Custom Qualification"
+           style="display:none; margin-top:10px;">
+
+    <label>Upload Candidate Photo (Optional)</label>
+    <input id="candidatePhoto" type="file" accept="image/*">
+
+    <button onclick="addCandidate()">➕ Add Candidate</button>
+  </div>
+
+  <!-- ========================= BACK BUTTON ========================= -->
+  <div style="text-align:center; margin-top:20px;">
+    <button onclick="window.location='/admin-panel'"
+            style="background:#00ff99; padding:12px 22px; border-radius:8px;">
+      ← Back to Admin Panel
+    </button>
+  </div>
+
+  <hr style="border:1px solid #004400; margin:25px 0;">
+
+  <!-- ========================= CANDIDATE LIST ========================= -->
+  <div class="candidate-list">
+    <h2>📋 Registered Candidates</h2>
+
+    <!-- ⭐⭐⭐ FIX–B: ID MUST BE EXACTLY THIS ⭐⭐⭐ -->
+    <div id="candidateList"></div>
+
+  </div>
+
+  <div class="footer-note">
+    Secure Blockchain Voting System | Admin Candidate Panel
+  </div>
+
+</div>
+
+<!-- ========================= JAVASCRIPT ========================= -->
+
+<!-- ⭐⭐⭐ FIX–A: REQUIRED SCRIPT INCLUDE ⭐⭐⭐ -->
+<script src="/js/candidate.js"></script>
+
+<script>
+// FILL AGE DROPDOWN
+const ageSelect = document.getElementById("candidateAge");
+for (let i = 18; i <= 100; i++) {
+  ageSelect.innerHTML += `<option value="${i}">${i}</option>`;
+}
+
+// SHOW OTHER QUALIFICATION FIELD
+function showOtherField() {
+  const value = document.getElementById("qualification").value;
+  document.getElementById("qualificationOther").style.display =
+      value === "Other" ? "block" : "none";
+}
+
+// ADD CANDIDATE
+async function addCandidate() {
+  const form = new FormData();
+
+  const name = document.getElementById("candidateName").value;
+  const party = document.getElementById("partyName").value;
+  const age = document.getElementById("candidateAge").value;
+
+  form.append("name", name);
+  form.append("party", party);
+  form.append("age", age);
+
+  let q = document.getElementById("qualification").value;
+  if (q === "Other") {
+    q = document.getElementById("qualificationOther").value;
+  }
+  form.append("qualification", q);
+
+  const photo = document.getElementById("candidatePhoto").files[0];
+  if (photo) form.append("photo", photo);
+
+  const res = await fetch("/admin/add_candidate", {
+    method: "POST",
+    body: form
+  });
+
+  const data = await res.json();
+  alert(data.message || "Candidate added!");
+
+  loadCandidates();
+}
+
+// DELETE CANDIDATE
+async function deleteCandidate(id) {
+  if (!confirm("Delete this candidate permanently?")) return;
+
+  const res = await fetch(`/admin/delete_candidate/${id}`, {
+    method: "DELETE"
+  });
+
+  const data = await res.json();
+  alert(data.message || "Candidate deleted!");
+
+  loadCandidates();
+}
+
+// LOAD ALL CANDIDATES
+async function loadCandidates() {
+  const res = await fetch("/admin/get_candidates");
+  const data = await res.json();
+
+  const list = document.getElementById("candidateList");
+  list.innerHTML = "";
+
+  data.candidates.forEach(c => {
+    list.innerHTML += `
+      <div class="candidate-card">
+
+         <div class="candidate-left">
+            <img class="candidate-photo"
+                 src="${c.photo || '/static/default_candidate.png'}">
+
+            <div class="info">
+               <h3>${c.name}</h3>
+               <p>${c.party}</p>
+            </div>
+         </div>
+
+         <button class="delete-btn" onclick="deleteCandidate(${c.id})">
+            ❌ Delete
+         </button>
+
+      </div>
+    `;
+  });
+}
+
+loadCandidates();
+</script>
+
+</body>
+</html>

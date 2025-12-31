@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Create / Delete Election | Secure Voting</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background: radial-gradient(circle at top, #061827, #01060c);
+    font-family: 'Orbitron', sans-serif;
+    overflow:hidden;
+    color:white;
+}
+
+canvas {
+    position:fixed;
+    inset:0;
+    z-index:-1;
+}
+
+.container{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.card{
+    width:500px;
+    padding:40px 45px;
+    text-align:center;
+    background: rgba(10,30,60,0.82);
+    border-radius:20px;
+    border:1px solid rgba(0,255,255,0.15);
+    box-shadow: 0 0 60px rgba(0,255,255,0.15),
+                inset 0 0 18px rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+}
+
+h1{
+    margin-bottom:25px;
+    color:#00f5ff;
+    text-shadow:0 0 15px rgba(0,255,255,0.55);
+}
+
+#msg {
+    margin-bottom:20px;
+    padding:12px;
+    font-size:15px;
+    min-height:22px;
+}
+
+.section-title{
+    font-size:16px;
+    margin-bottom:8px;
+    color:#80ffc9;
+    text-align:left;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    font-size:14px;
+    border:none;
+    outline:none;
+    border-radius:8px;
+    background: #081f35;
+    color:#fff;
+    box-shadow: inset 0 0 6px rgba(0,255,255,0.25);
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:30px;
+    background: linear-gradient(90deg,#00f5ff,#00ffa2);
+    color:#000;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+    margin-top:5px;
+}
+
+button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 20px #00f5ff;
+}
+
+delete-btn{
+    background: linear-gradient(90deg,#ff4b4b,#ff8e8e);
+    margin-top:8px;
+}
+
+.back{
+    display:block;
+    margin-top:20px;
+    color:#00cfff;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.back:hover{
+    text-decoration:underline;
+}
+
+.divider{
+    height:1px;
+    background:rgba(255,255,255,0.1);
+    margin:28px 0 20px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container">
+<div class="card">
+
+<h1>🗳 CREATE / DELETE ELECTION</h1>
+
+<div id="msg"></div>
+
+<div class="section-title">Create New Election</div>
+<input id="electionName" type="text" placeholder="Enter Election Name">
+<button onclick="createElection()">Create Election</button>
+
+<div class="divider"></div>
+
+<div class="section-title">Delete an Election</div>
+<input id="deleteId" type="number" placeholder="Enter Election ID to Delete">
+<button class="delete-btn" onclick="deleteElection()">Delete Election</button>
+
+<a class="back" href="admin.html">← Back to Admin Panel</a>
+
+</div>
+</div>
+
+
+<!-- POPUP -->
+<div id="popup" style="
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,255,180,0.15);
+    padding: 14px 25px;
+    border-radius: 12px;
+    color: #00ffcc;
+    font-family: 'Orbitron';
+    border: 1px solid #00ffcc;
+    display: none;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 20px rgba(0,255,180,0.5);
+">
+Popup Text
+</div>
+
+
+<!-- BACKGROUND ANIMATION -->
+<script>
+const c = document.getElementById("bg");
+const ctx = c.getContext("2d");
+
+function resize(){
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let dots = [];
+for(let i=0;i<120;i++){
+    dots.push({
+        x:Math.random()*c.width,
+        y:Math.random()*c.height,
+        r:1.5,
+        dx:(Math.random()-0.5)*0.5,
+        dy:(Math.random()-0.5)*0.5
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0,c.width,c.height);
+    dots.forEach((d,i)=>{
+        d.x += d.dx; d.y += d.dy;
+        if(d.x<0||d.x>c.width) d.dx*=-1;
+        if(d.y<0||d.y>c.height) d.dy*=-1;
+
+        ctx.beginPath();
+        ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+        ctx.fillStyle="#00f5ff";
+        ctx.fill();
+
+        for(let j=i+1;j<dots.length;j++){
+            let dist = Math.hypot(d.x-dots[j].x, d.y-dots[j].y);
+            if(dist<130){
+                ctx.strokeStyle="rgba(0,255,255,0.05)";
+                ctx.beginPath();
+                ctx.moveTo(d.x,d.y);
+                ctx.lineTo(dots[j].x,dots[j].y);
+                ctx.stroke();
+            }
+        }
+    });
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+
+<!-- MAIN LOGIC -->
+<script>
+
+const API_BASE = "http://127.0.0.1:5000";
+const msg = document.getElementById("msg");
+
+
+function popup(text, color = "#00ffcc") {
+    const p = document.getElementById("popup");
+    p.style.display = "block";
+    p.style.color = color;
+    p.innerHTML = text;
+
+    setTimeout(() => {
+        p.style.display = "none";
+    }, 2200);
+}
+
+
+// LOAD ACTIVE ELECTION
+async function loadExistingElection() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/current_election`);
+        const data = await res.json();
+
+        if (!data.exists) {
+            msg.style.color = "yellow";
+            msg.innerHTML = "No active election.";
+            return;
+        }
+
+        msg.style.color = "#00ffcc";
+        msg.innerHTML = `Active Election → <br>ID: ${data.id} <br>Name: ${data.title}`;
+        document.getElementById("deleteId").value = data.id;
+
+    } catch (err) {
+        msg.style.color = "red";
+        msg.innerHTML = "Error loading election!";
+    }
+}
+
+
+
+// CREATE ELECTION
+async function createElection() {
+    const name = document.getElementById("electionName").value.trim();
+    msg.innerHTML = "";
+
+    if (!name) {
+        popup("⚠ Enter election name!", "yellow");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/create_election`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ title: name })
+        });
+
+        const data = await res.json();
+
+        // ⭐ UPDATED: Show ID + Name when election exists
+        if (data.exists) {
+            msg.style.color = "yellow";
+            msg.innerHTML = `
+                ⚠ Election already exists! <br>
+                ID: ${data.election_id} <br>
+                Name: ${data.election_name}
+            `;
+            document.getElementById("deleteId").value = data.election_id;
+            return;
+        }
+
+        if (data.success) {
+            popup("🎉 Election Created!", "#00ffcc");
+            msg.style.color = "#00ffcc";
+            msg.innerHTML = `Created → ID: ${data.election_id}, Name: ${name}`;
+            document.getElementById("deleteId").value = data.election_id;
+            return;
+        }
+
+        popup(data.message, "red");
+
+    } catch (err) {
+        popup("Server Error!", "red");
+    }
+}
+
+
+
+// DELETE ELECTION
+async function deleteElection() {
+    const id = document.getElementById("deleteId").value.trim();
+
+    if (!id) {
+        popup("⚠ Enter election ID!", "yellow");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/delete_election/${id}`, {
+            method: "DELETE"
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            popup("🗑 Election Deleted!", "#00ffcc");
+            msg.innerHTML = "No active election.";
+            document.getElementById("deleteId").value = "";
+        } 
+        else {
+            popup("❌ " + data.message, "red");
+        }
+
+    } catch(err) {
+        popup("Server Error!", "red");
+    }
+}
+
+
+window.onload = loadExistingElection;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* frontend/public/assets/styles.css */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(circle at top, #020617, #020617 40%, #000);
+    margin: 0;
+    padding: 0;
+    color: #e5f1ff;
+}
+
+header {
+    background: rgba(15, 23, 42, 0.96);
+    color: #e5f1ff;
+    padding: 16px 24px;
+    text-align: center;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.5);
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.85);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+}
+
+.card {
+    max-width: 480px;
+    margin: 40px auto;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 24px 28px;
+    border-radius: 18px;
+    box-shadow:
+        0 20px 45px rgba(15, 23, 42, 0.9),
+        0 0 30px rgba(56, 189, 248, 0.18);
+    backdrop-filter: blur(12px);
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #e0f2fe;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 11px 12px;
+    margin: 8px 0 16px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    background: rgba(15, 23, 42, 0.95);
+    color: #e5f1ff;
+    outline: none;
+}
+
+input::placeholder {
+    color: #64748b;
+}
+
+select {
+    cursor: pointer;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #0284c7, #0ea5e9);
+    border: none;
+    color: #f9fafb;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 4px;
+    font-weight: 600;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.4);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.btn:hover {
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
+}
+
+.link {
+    color: #38bdf8;
+    display: block;
+    margin-top: 14px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.warning {
+    color: #f97373;
+    margin-top: 8px;
+    text-align: left;
+    min-height: 18px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid rgba(51, 65, 85, 0.9);
+    margin: 18px 0;
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Register Voter</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <style>
+    .card { width: 480px; margin: 40px auto; text-align:center; padding:30px; }
+    input { width:100%; padding:12px; margin:10px 0; border-radius:8px; }
+
+    #previewWrap {
+      margin:18px auto; width:260px; height:260px; border-radius:50%;
+      box-shadow:0 0 30px rgba(0,200,255,0.35);
+      overflow:hidden; background:#000;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    #video { display:none; width:260px; height:260px; object-fit:cover; transform:scaleX(-1); }
+
+    button.btn {
+      width:100%; padding:12px; margin-top:12px;
+      border-radius:8px; background:#0ea5ff;
+      color:#fff; border:none;
+    }
+
+    .secondary { background:#22c55e; }
+    .danger { background:#ef4444; }
+
+    #status { margin-top:10px; color:#5fe1d8; }
+
+    table {
+      width:100%; margin-top:20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding:10px;
+      border-bottom:1px solid #334155;
+      color:#e5f3ff;
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Register Voter</h2>
+
+  <input id="name" placeholder="Name" />
+  <input id="enrollment" placeholder="Enrollment Number" />
+
+  <div id="previewWrap">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="circleCanvas" width="260" height="260"></canvas>
+  </div>
+
+  <button id="registerBtn" class="btn">Register Voter</button>
+  <button id="showVotersBtn" class="btn secondary">Show Registered Voters</button>
+
+  <p id="status"></p>
+
+  <!-- VOTER LIST -->
+  <div id="voterList" style="display:none;">
+    <h3>Registered Voters</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Enrollment</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="voterTable"></tbody>
+    </table>
+  </div>
+
+  <p><a href="/admin-panel">Back to Admin Panel</a></p>
+</div>
+
+<script src="/js/voter.js"></script>
+</body>
+</html>

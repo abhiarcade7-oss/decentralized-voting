@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | Blockchain Voting System</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background: radial-gradient(circle at top, #0b1a33, #020617 70%);
+            color: #e6f1ff;
+        }
+
+        header {
+            padding: 35px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #00c6ff, #6be3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            margin-top: 10px;
+            color: #9fbcd4;
+            letter-spacing: 0.4px;
+        }
+
+        .dashboard {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 25px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(10, 30, 70, 0.45);
+            border-radius: 18px;
+            padding: 32px 28px;
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 170, 255, 0.25);
+            box-shadow: 0 0 25px rgba(0, 180, 255, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 45px rgba(0, 200, 255, 0.45);
+        }
+
+        .icon { font-size: 42px; margin-bottom: 15px; }
+
+        .card h2 {
+            margin: 10px 0 12px;
+            font-size: 22px;
+            color: #9fdcff;
+        }
+
+        .card p {
+            font-size: 15px;
+            color: #b4cbe0;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .card button {
+            width: 100%;
+            padding: 14px 0;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            color: #001018;
+            background: linear-gradient(135deg, #00e0ff, #00a6ff);
+        }
+
+        footer {
+            text-align: center;
+            padding: 18px;
+            font-size: 14px;
+            color: #7fa6c7;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .top-actions {
+            position: absolute;
+            right: 25px;
+            top: 25px;
+        }
+
+        .logout-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- 🔐 AUTH CHECK (MOST IMPORTANT) -->
+<script>
+(async () => {
+    try {
+        const res = await fetch("/admin/me");
+        if (!res.ok) {
+            window.location.replace("/admin_login.html");
+        }
+    } catch {
+        window.location.replace("/admin_login.html");
+    }
+})();
+</script>
+
+<!-- LOGOUT BUTTON -->
+<div class="top-actions">
+    <button class="logout-btn" onclick="logoutAdmin()">Logout</button>
+</div>
+
+<header>
+    <h1>Blockchain Voting System</h1>
+    <p>Admin Dashboard • Secure • Transparent • Decentralized</p>
+</header>
+
+<section class="dashboard">
+
+    <div class="card">
+        <div class="icon">🗳️</div>
+        <h2>Create / Manage Election</h2>
+        <p>Create and manage blockchain-backed elections.</p>
+        <button onclick="goToCreateElection()">Open Panel</button>
+    </div>
+
+    <div class="card">
+        <div class="icon">👤</div>
+        <h2>Candidate Registration</h2>
+        <p>Register candidates and manage their information.</p>
+        <button onclick="goToCandidate()">Open Panel</button>
+    </div>
+
+    <div class="card">
+        <div class="icon">🧑‍🤝‍🧑</div>
+        <h2>Voter Registration</h2>
+        <p>Register voters using secure face verification.</p>
+        <button onclick="goToVoter()">Open Panel</button>
+    </div>
+
+</section>
+
+<footer>
+    © 2025 Blockchain Voting System — Admin Panel
+</footer>
+
+<script>
+    function goToCreateElection() {
+        window.location.href = "/create_election.html";
+    }
+
+    function goToCandidate() {
+        window.location.href = "/candidate_registration.html";
+    }
+
+    function goToVoter() {
+        window.location.href = "/register_voter.html";
+    }
+
+    async function logoutAdmin() {
+        await fetch("/admin/logout", { method: "POST" });
+        window.location.replace("/admin_login.html");
+    }
+</script>
+
+</body>
+</html>
